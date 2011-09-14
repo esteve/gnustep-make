@@ -1,0 +1,17 @@
+2011-05-22  Yavor Doganov  <yavor@gnu.org>
+
+	* Documentation/GNUmakefile (GNUSTEP_TEXI2HTML_FLAGS): Define
+          as a simply expanded variable to override the built-in flags.
+
+
+--- gnustep-make.orig/Documentation/GNUmakefile
++++ gnustep-make/Documentation/GNUmakefile
+@@ -141,7 +141,7 @@
+ 
+ include ../Version
+ 
+-GNUSTEP_TEXI2HTML_FLAGS += -init_file gnustep.init
++GNUSTEP_TEXI2HTML_FLAGS := -expandinfo -init_file gnustep.init
+ 
+ # Typing 'make regenerate' should build all, then install the files
+ # top-level.  This is mostly for making gnustep-make releases.

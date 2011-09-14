@@ -1,0 +1,23 @@
+Debian-specific.
+
+--- gnustep-make-2.4.0.orig/common.make
++++ gnustep-make-2.4.0/common.make
+@@ -414,6 +414,9 @@
+ 
+ # First, we add paths based in the USER domain.
+ 
++# Don't add GNUSTEP_USER_ROOT paths if being built by dpkg-buildpackage
++ifndef DEB_BUILD_ARCH
++
+ # Please note that the following causes GS_HEADER_PATH to be evaluated
+ # with the variable domain equal to USER, which gives the effect we
+ # wanted.
+@@ -421,6 +424,8 @@
+ GNUSTEP_LIBRARIES_DIRS = $(foreach domain,USER,$(GS_LIBRARY_PATH))
+ GNUSTEP_FRAMEWORKS_DIRS = $(foreach domain,USER,$(GS_FRAMEWORK_PATH))
+ 
++endif
++
+ # Second, if LOCAL flags are different from USER flags (which have
+ # already been added), we add the LOCAL flags too.
+ ifneq ($(GNUSTEP_LOCAL_HEADERS), $(GNUSTEP_USER_HEADERS))

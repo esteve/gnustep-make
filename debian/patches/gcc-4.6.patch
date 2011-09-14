@@ -1,0 +1,26 @@
+2011-09-14  Yavor Doganov  <yavor@gnu.org>
+
+	* config.make.in (CC, CXX): Add -4.6 suffix to enforce gcc-4.6
+	on all architectures.
+
+
+--- gnustep-make.orig/config.make.in
++++ gnustep-make/config.make.in
+@@ -34,7 +34,7 @@
+ # Ignore the default CC=cc used by GNU make when nothing is specified;
+ # in that case, we want to use our own default CC.
+ ifeq ($(origin CC), default)
+-  CC       = @CC@
++  CC       = @CC@-4.6
+ endif
+ 
+ # If CC is already set but not from the GNU make default (ie, in the
+@@ -47,7 +47,7 @@
+ # Ignore the default CXX=g++ used by GNU make when nothing is specified;
+ # in that case, we want to use our own default CXX.
+ ifeq ($(origin CC), default)
+-  CXX       = @CXX@
++  CXX       = @CXX@-4.6
+ endif
+ 
+ # If CXX is already set but not from the GNU make default (ie, in the

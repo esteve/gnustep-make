@@ -1,0 +1,384 @@
+#! /usr/bin/make -f
+
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
+
+# =============================================================================
+# * Configuration variables:
+
+# Should we relocate files to comply with the FHS and Debian policy?
+# (use "yes" or "no")
+#   *Note:* if you change this setting to "no", it is recommended that you also
+#   change root as well to something other than the Debian default.  This will
+#   prevent other GNUstep packages from accidentally conflicting with your
+#   custom packages.
+GS_USE_FHS = yes
+
+# Directories:
+# Root of GNUstep tree
+# (Default to a different directory if we are not following the FHS.)
+ifeq ($(GS_USE_FHS),yes)
+GS_ROOT = /usr/lib/GNUstep
+else
+GS_ROOT = /usr/GNUstep
+endif
+# Root of System domain
+GS_SYSTEM_ROOT = $(GS_ROOT)/System
+# Root of Local domain
+GS_USRLOCAL	= /usr/local/lib/GNUstep
+GS_LOCAL_ROOT	= $(GS_USRLOCAL)/Local
+# Root of Network domain
+GS_NETWORK_ROOT	= $(GS_USRLOCAL)/Network
+
+# End of configuration variables
+# =============================================================================
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# bashism: we're using brace expansion
+export SHELL=/bin/bash
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+include /usr/share/quilt/quilt.make
+
+# make some files executable
+dummy := $(shell chmod +x config.guess clean_cpu.sh clean_os.sh \
+			cpu.sh os.sh configure mkinstalldirs)
+
+# package names
+p_common	= gnustep-common
+p_make		= gnustep-make
+p_doc		= $(p_make)-doc
+
+# package build dirs
+b_make		= $(CURDIR)/build-$(p_make)
+
+# package temp dirs
+d_common	= $(CURDIR)/debian/$(p_common)
+d_make		= $(CURDIR)/debian/$(p_make)
+d_doc		= $(CURDIR)/debian/$(p_doc)
+
+# gcc/gobjc
+CC = gcc
+CXX = g++
+
+# -----------------------------------------------------------------------------
+# GNUstep SETTINGS
+
+GS_SHARE_DIR	= usr/share/GNUstep
+
+# which directory structure are we using? FHS or the default GNUstep?
+ifeq ($(GS_USE_FHS),yes)
+  dir_struct = fhs
+  GS_FS_LAYOUT = fhs-system
+  GS_DOC_DIR	= /$(GS_SHARE_DIR)/Documentation
+  GS_MAKE_DIR	= /$(GS_SHARE_DIR)/Makefiles
+  GS_SCRIPT_DIR	= $(GS_SYSTEM_ROOT)/Tools
+  GS_TOOLS_DIR	= /usr/bin
+else
+  dir_struct = gnustep
+  GS_FS_LAYOUT = gnustep
+  GS_DOC_DIR	= $(GS_SYSTEM_ROOT)/Library/Documentation
+  GS_MAKE_DIR	= $(GS_SYSTEM_ROOT)/Library/Makefiles
+  GS_SCRIPT_DIR	= $(GS_MAKE_DIR)
+  GS_TOOLS_DIR	= $(GS_SYSTEM_ROOT)/Tools
+endif
+
+GS_FS_PACKAGE = gnustep-fslayout-$(dir_struct)
+
+# (Other directories are set above)
+GS_LIBS_DIR	= $(GS_SYSTEM_ROOT)/Library/Libraries
+
+# Library combo
+GS_LIBRARY_COMBO	= gnu-gnu-gnu
+
+sed_var_subst_gs = sed -e 's:@GS_USE_FHS@:$(GS_USE_FHS):g' \
+		       -e 's:@GS_ROOT@:$(GS_ROOT):g' \
+		       -e 's:@GS_SYSTEM_ROOT@:$(GS_SYSTEM_ROOT):g' \
+		       -e 's:@GS_LOCAL_ROOT@:$(GS_LOCAL_ROOT):g' \
+		       -e 's:@GS_NETWORK_ROOT@:$(GS_NETWORK_ROOT):g' \
+		       -e 's:@GS_DOC_DIR@:$(GS_DOC_DIR):g' \
+		       -e 's:@GS_MAKE_DIR@:$(GS_MAKE_DIR):g' \
+		       -e 's:@GS_SCRIPT_DIR@:$(GS_SCRIPT_DIR):g' \
+		       -e 's:@GS_FS_PACKAGE@:$(GS_FS_PACKAGE):g' \
+
+# Convenience variables to temporarily create and delete the symlink
+# for config-noarch.make.
+c-n := $(GS_MAKE_DIR)/config-noarch.make
+create-compat-symlink := ln -s $(d_common)$(c-n) $(d_make)$(c-n)
+delete-compat-symlink := rm $(d_make)$(c-n)
+
+# prepare the tree for building
+dir_struct_files = dh_gnustep $(p_common).links $(p_common).dirs \
+		$(p_common).postinst $(p_common).prerm
+in_files = config.mk $(p_make).dirs gs_make
+prep: debian/prep-stamp
+clean_files += debian/prep-stamp
+debian/prep-stamp:
+	dh_testdir
+
+	@ # copy files that control the directory structure with variable subst
+	for i in $(dir_struct_files); do \
+	  [ -e debian/$(dir_struct)/$$i ] && \
+	    cp debian/$(dir_struct)/$$i debian/$$i || true; \
+	  [ -e debian/$(dir_struct)/$$i.in ] && \
+	    $(sed_var_subst_gs) debian/$(dir_struct)/$$i.in > debian/$$i || true; \
+	done
+
+	chmod +x debian/dh_gnustep
+
+	for i in $(in_files); do \
+	  $(sed_var_subst_gs) debian/$$i.in > debian/$$i; \
+	done
+
+	chmod +x debian/gs_make
+
+	touch $@
+
+clean_files += $(foreach file,$(dir_struct_files),debian/$(file))
+clean_files += $(foreach file,$(in_files),debian/$(file))
+
+
+debian/control debian/control.tmp: debian/control.in debian/rules
+	$(sed_var_subst_gs) debian/control.in > $@
+
+
+clean_files += debian/$(p_make)-configure-stamp
+debian/$(p_make)-configure-stamp: configure
+	dh_testdir
+
+	-mkdir $(b_make)
+
+	cd $(b_make) && CC=$(CC) CXX=$(CXX) ../configure \
+		--with-layout=$(GS_FS_LAYOUT) \
+		--build=$(DEB_BUILD_GNU_TYPE) \
+		--host=$(DEB_HOST_GNU_TYPE) \
+		--target=$(DEB_HOST_GNU_TYPE) \
+		--enable-native-objc-exceptions \
+
+	touch $@
+
+
+# NOTE: The Build-Indep-Depends are only available, when building the
+# build-indep packages.
+build: patch build-arch # build-indep
+
+build-arch: debian/build-arch-stamp
+clean_files += debian/build-arch-stamp
+debian/build-arch-stamp: debian/$(p_make)-configure-stamp
+	$(MAKE) -C $(b_make)
+	touch $@
+
+
+build-indep: debian/build-indep-stamp
+clean_files += debian/build-indep-stamp
+debian/build-indep-stamp: binary-arch
+# As of 2.4.0-3, config-noarch.make is moved into -common
+# (Bug#583840).  Because the package is built with internal
+# GNUSTEP_MAKEFILES, the link must be created and deleted in every
+# rule which uses gnustep-make.
+	$(create-compat-symlink)
+	GNUSTEP_MAKEFILES=$(d_make)$(GS_MAKE_DIR) $(MAKE) -C Documentation
+	$(delete-compat-symlink)
+	touch $@
+
+
+install: install-indep install-arch
+install-indep: debian/install-indep-stamp
+clean_files += debian/install-indep-stamp
+debian/install-indep-stamp: build-indep install-arch prep
+	dh_testdir
+	dh_testroot
+	dh_prep -p$(p_doc)
+	dh_installdirs -p$(p_doc) usr/share/doc/$(p_make)
+	$(create-compat-symlink)
+	GNUSTEP_MAKEFILES=$(d_make)$(GS_MAKE_DIR) $(MAKE) -C Documentation \
+	  install DESTDIR=$(d_doc)
+	$(delete-compat-symlink)
+
+	@ # Install Internals doc
+	dh_install -p$(p_doc) -X .arch-ids debian/Internals $(GS_DOC_DIR)/Developer/Make/Manual
+
+	@ # remove postscript doc
+	-find $(d_doc)/$(GS_DOC_DIR) -name '*.ps' | xargs rm -f
+
+	@ # remove all uninteresting info manuals
+	rm $(d_doc)/usr/share/info/gnustep-{faq,userfaq,howto,filesystem}.info
+
+	touch $@
+
+
+install-arch: debian/install-arch-stamp
+clean_files += debian/install-arch-stamp
+common_scripts = GNUstep-reset.sh GNUstep.csh GNUstep.sh config.guess \
+		config.sub cpu.sh clean_cpu.sh vendor.sh clean_vendor.sh \
+		os.sh clean_os.sh fixpath.sh filesystem.sh filesystem.csh \
+		print_unique_pathlist.sh config-noarch.make
+cdbs_dir = usr/share/cdbs/1
+debian/install-arch-stamp: build-arch prep
+	dh_testdir
+	dh_testroot
+	dh_prep -a
+	dh_installdirs
+
+	$(MAKE) -C $(b_make) install DESTDIR=$(d_common)
+
+	install -m 755 debian/dh_gnustep $(d_make)/usr/bin
+	install -m 755 debian/gs_make $(d_make)/usr/bin
+	install -m 644 debian/config.mk $(d_make)/$(GS_SHARE_DIR)/debian
+
+	install -m 644 debian/cdbs/gnumakefile.mk $(d_make)/$(cdbs_dir)/class
+	install -m 644 debian/cdbs/gnustep.mk $(d_make)/$(cdbs_dir)/rules
+	install -m 644 debian/cdbs/*.in $(d_make)/$(GS_SHARE_DIR)/debian
+
+	@ # move makefiles from gnustep-common to gnustep-make, then move
+	@ # the necessary scripts back to gnustep-common
+	mv $(d_common)/$(GS_MAKE_DIR) $(d_make)/$(GS_MAKE_DIR)
+	install -d $(d_common)/$(GS_MAKE_DIR)
+	for i in $(common_scripts); do \
+	  mv $(d_make)/$(GS_MAKE_DIR)/$$i $(d_common)/$(GS_MAKE_DIR); \
+	done
+	install -d $(d_make)/$(GS_TOOLS_DIR)
+	mv $(d_common)/$(GS_TOOLS_DIR)/gnustep-{config,tests} \
+	  $(d_make)/$(GS_TOOLS_DIR)
+
+	@ # remove info dir
+#	rmdir $(d_common)/$(GS_SYSTEM_ROOT)/Library/Documentation/info
+#	rmdir $(d_make_ogo)/$(GS_OGO_DOC_DIR)/info
+
+#	rm -f $(d_common)/$(GS_SYSTEM_ROOT)/share/config.site
+#	rm -f $(d_make_ogo)/$(GS_OGO_SYSTEM_ROOT)/share/config.site
+#	-rmdir $(d_common)/$(GS_SYSTEM_ROOT)/share
+#	-rmdir $(d_make_ogo)/$(GS_OGO_SYSTEM_ROOT)/share
+
+	rm -f $(d_make)/$(GS_MAKE_DIR)/app-wrapper.template
+
+	@ # replace config.sub, config.guess with versions from autotools-dev
+	rm $(d_common)/$(GS_MAKE_DIR)/config.sub
+	rm $(d_common)/$(GS_MAKE_DIR)/config.guess
+	ln -s /usr/share/misc/config.sub $(d_common)/$(GS_MAKE_DIR)
+	ln -s /usr/share/misc/config.guess $(d_common)/$(GS_MAKE_DIR)
+
+	@ # according to policy manual 10.1.2 --> postinst/prerm
+	@ # Now use dh_usrlocal debhelper program.
+
+	touch $@
+
+
+# Build architecture independant packages
+binary-indep: install-indep install-arch
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs -i ChangeLog
+	dh_installdocs -i ANNOUNCE NEWS README
+	dh_link -p $(p_doc) \
+	  $(GS_DOC_DIR)/Developer usr/share/doc/$(p_make)/Developer \
+	  $(GS_DOC_DIR)/User usr/share/doc/$(p_make)/User \
+	  usr/share/doc/$(p_make)/Developer usr/share/doc/$(p_doc)/Developer \
+	  usr/share/doc/$(p_make)/User usr/share/doc/$(p_doc)/User \
+	  usr/share/doc/$(p_make)/User/GNUstep/FAQ usr/share/doc/$(p_make)/FAQ \
+	  usr/share/doc/$(p_make)/FAQ usr/share/doc/$(p_doc)/FAQ
+	debian/dh_gnustep -i
+
+	@ # remove man pages (duplicated)
+	rm -rf $(d_doc)/usr/share/man
+
+	dh_usrlocal -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+
+# Build architecture dependant packages
+binary-arch: install-arch
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs -a ChangeLog
+	dh_installdocs -a ANNOUNCE NEWS README
+
+	@ # relocate files
+ifeq ($(GS_USE_FHS),yes)
+## FIXME: GNUstep.csh and GNUstep.sh shouldn't be in /usr/share, since they
+## contain architecture-specific strings
+#	for i in GNUstep.csh GNUstep.sh; do \
+	  mv $(d_common)/$(GS_SYSTEM_ROOT)/Library/Makefiles/$$i $(d_common)/$(GS_SCRIPT_DIR); \
+	  ln -s $(GS_SCRIPT_DIR)/$$i $(d_common)/$(GS_SYSTEM_ROOT)/Library/Makefiles/$$i; \
+	done
+
+#	install -d $(d_make)/$(GS_SCRIPT_DIR)
+#	mv $(d_make)/$(GS_SYSTEM_ROOT)/Library/Makefiles/which_lib $(d_make)/$(GS_SCRIPT_DIR);
+#	ln -s $(GS_SCRIPT_DIR)/which_lib $(d_make)/$(GS_SYSTEM_ROOT)/Library/Makefiles/which_lib;
+endif
+	debian/dh_gnustep -a
+
+	pod2man debian/dh_gnustep debian/dh_gnustep.1
+	dh_installman -p$(p_make) \
+	  debian/dh_gnustep.1 debian/gs_make.1 debian/gnustep-tests.1
+
+	@ # support obsolete gsdh_gnustep (for now)
+	dh_link -p$(p_make) usr/bin/dh_gnustep usr/bin/gsdh_gnustep \
+	  usr/share/man/man1/dh_gnustep.1.gz usr/share/man/man1/gsdh_gnustep.1.gz
+
+	dh_link -a
+	dh_usrlocal -a
+	dh_strip -a
+	dh_compress -a
+	dh_fixperms -a
+	dh_installdeb -a
+	dh_shlibdeps -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+clean_files += debian/dh_gnustep.1
+
+
+# Test that debian/control is up to date
+clean_files += debian/control.tmp
+test-control: debian/control.tmp
+	diff debian/control debian/control.tmp && rm -f debian/control.tmp
+
+clean: clean-patched unpatch
+
+clean-patched: test-control
+	dh_testdir
+	dh_testroot
+
+	@ # Clean Documentation dir
+#	if .../GNUstep.sh doesn't exist, then we assume the documentation dir
+#	is clean
+	if [ -e $(d_common)/$(GS_MAKE_DIR)/GNUstep.sh ]; then \
+	  $(create-compat-symlink); \
+	  GNUSTEP_MAKEFILES=$(d_make)$(GS_MAKE_DIR) \
+	    $(MAKE) -C Documentation clean; \
+	  GNUSTEP_MAKEFILES=$(d_make)$(GS_MAKE_DIR) \
+	    $(MAKE) -C Documentation distclean; \
+	  $(delete-compat-symlink); \
+	fi
+
+	rm -f config-precomp-test/a.out config-precomp-test/gs_precomp_test.h.gch
+	rm -f Documentation/*.{aux,dvi,gz,info,html,log,ps,toc,vr,vrs,pdf}
+	rm -f Documentation/version.texi
+	rm -f Documentation/{ANNOUNCE,FAQ,GNUstep-HOWTO,INSTALL,NEWS,README}
+
+	@ # Clean build dirs
+	rm -rf $(b_make)
+
+	rm -f $(clean_files)
+
+	dh_clean
+
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch

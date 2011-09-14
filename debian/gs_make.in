@@ -1,0 +1,4 @@
+#!/bin/sh
+# helper script for building GNUstep projects
+# sets up the GNUstep environment variables, and then calls make
+GNUSTEP_MAKEFILES=@GS_MAKE_DIR@ make "$@"

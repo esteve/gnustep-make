@@ -1,0 +1,9 @@
+usr/share/GNUstep/Colors @GS_ROOT@/Colors
+usr/share/GNUstep/DocTemplates @GS_ROOT@/DocTemplates
+usr/share/GNUstep/Fonts @GS_ROOT@/Fonts
+usr/share/GNUstep/KeyBindings @GS_ROOT@/KeyBindings
+usr/share/GNUstep/Libraries @GS_ROOT@/Libraries
+usr/share/GNUstep/PostScript @GS_ROOT@/PostScript
+usr/share/xml/gnustep @GS_ROOT@/DTDs
+usr/share/pixmaps/GNUstep @GS_ROOT@/Images
+usr/share/sounds/GNUstep @GS_ROOT@/Sounds

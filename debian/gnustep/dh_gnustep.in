@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+dh_gnustep - moves files in the GNUstep hierarchy to FHS-compliant locations
+
+=cut
+
+use strict;
+
+=head1 SYNOPSIS
+
+B<dh_gnustep> [S<I<debhelper options>>]
+
+=head1 DESCRIPTION
+
+dh_gnustep is a program based on debhelper that is responsible for doing
+GNUstep-specific modifications.
+
+dh_gnustep makes the following changes:
+
+=over 4
+
+=item GNUstep dependencies:
+
+Adds any extra dependencies needed for GNUstep.  Currently, the only dependency
+added is to ensure that the package uses the same filesystem layout as the
+other GNUstep packages installed on the system.
+
+=back
+
+=head1 OPTIONS
+
+dh_gnustep accepts the common debhelper options.
+
+If the DEB_GNUSTEP_NO_MOVE environment variable is set to a non-empty, non-zero
+value, then dh_gnustep exits without doing anything.
+
+Should remove library_paths.openapp and stamp.make files.
+
+Doesn't really do the right thing with info files (should call install-info).
+
+=cut
+
+foreach my $package (@{$dh{DOPACKAGES}}) {
+	# make each package depend on the GNUstep filesystem layout that it was
+	# built with
+	addsubstvar($package, "gnustep:Depends", "@GS_FS_PACKAGE@");
+}
+
+exit 0;
+
+=head1 SEE ALSO
+
+L<debhelper(7)>
+
+This program is not part of debhelper.
+
+=head1 AUTHOR
+
+Hubert Chan <hubert@uhoreg.ca>
+
+=cut

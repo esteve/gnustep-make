@@ -1,0 +1,8 @@
+# -*- makefile -*-
+# Configuration variables describing the GNUstep paths
+
+GS_USE_FHS	= @GS_USE_FHS@
+
+GS_MAKE_DIR	= @GS_MAKE_DIR@
+
+include @GS_MAKE_DIR@/filesystem.make

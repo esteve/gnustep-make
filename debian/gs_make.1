@@ -1,0 +1,34 @@
+.TH gs_make 1 "08/08/2009" GNUstep "GNUstep System Manual"
+.SH NAME
+gs_make \- wrapper for GNUstep Make.
+.SH SYNOPSIS
+.BR gs_make " ["
+.I make(1) options
+]
+.SH DESCRIPTION
+.B gs_make
+is a very simple script which invokes make(1) with the environment
+variable $GNUSTEP_MAKEFILES set.  It is useful for building GNUstep
+software without necessarily sourcing GNUstep.sh.
+.SH OPTIONS
+.B gs_make
+accepts all options of make(1).
+.SH BUGS
+Avoid using
+.B gs_make
+in makefiles' recipes, because it invokes the plain
+.B make
+command instead of $(MAKE), which is the appropriate variable for
+communicating options to sub-makes.
+.SH SEE ALSO
+GNUstep(7), make(1).
+.SH AUTHORS
+.BR gs_make
+was written by Hubert Chati <uhoreg@debian.org>.
+This man page was written by Yavor Doganov <yavor@gnu.org>.
+.SH COPYRIGHT
+Copyright (C) 2009 Free Software Foundation, Inc.
+.PP
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.

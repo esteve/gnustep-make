@@ -1,0 +1,50 @@
+Source: gnustep-make
+Section: gnustep
+Priority: optional
+Maintainer: Debian GNUstep maintainers <pkg-gnustep-maintainers@lists.alioth.debian.org>
+Uploaders: Gürkan Sengün <gurkan@phys.ethz.ch>,
+	   Yavor Doganov <yavor@gnu.org>
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 7),
+	       quilt,
+	       gobjc++-4.6
+Build-Depends-Indep: texinfo,
+		     texlive-base,
+		     texlive-base-bin,
+		     texlive-latex-base,
+		     texi2html
+Homepage: http://gnustep.org
+Vcs-Git: git://git.debian.org/pkg-gnustep/gnustep-make.git
+Vcs-Browser: http://git.debian.org/?p=pkg-gnustep/gnustep-make.git
+
+Package: gnustep-common
+Architecture: any
+Depends: autotools-dev,
+	 ${misc:Depends}
+Suggests: gnustep-base-common
+Replaces: gnustep-make
+Provides: @GS_FS_PACKAGE@
+Description: Common files for the core GNUstep environment
+ This package contains the common files, scripts and directory layout
+ needed to run any GNUstep software.
+
+Package: gnustep-make
+Architecture: all
+Depends: gnustep-common (>= ${source:Version}),
+	 gobjc-4.6,
+	 ${misc:Depends},
+	 ${gnustep:Depends}
+Suggests: gnustep-make-doc (>= 2.0.0),
+	  gnustep-base-common
+Description: Basic GNUstep Makefiles
+ This package contains the makefiles needed to compile any GNUstep
+ software.
+
+Package: gnustep-make-doc
+Section: doc
+Architecture: all
+Depends: dpkg (>= 1.15.4) | install-info,
+	 ${misc:Depends}
+Description: Documentation for GNUstep-make
+ This package contains text, HTML and PDF documentation for the
+ GNUstep-make package.

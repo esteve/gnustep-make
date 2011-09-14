@@ -1,0 +1,2 @@
+@PACKAGE@: postinst-has-useless-call-to-ldconfig
+@PACKAGE@: postrm-has-useless-call-to-ldconfig

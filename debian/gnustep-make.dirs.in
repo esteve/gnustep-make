@@ -1,0 +1,5 @@
+@GS_SYSTEM_ROOT@/Library
+usr/share/GNUstep/debian
+usr/share/cdbs/1/class
+usr/share/cdbs/1/rules
+usr/bin

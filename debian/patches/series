@@ -1,0 +1,6 @@
+gcc-4.6.patch
+texi2html-flags.patch
+library-combo-whatis-entry.patch
+info-document-missing-direntry.patch
+fhs-system-includedir.patch
+no-user-root-paths.patch
