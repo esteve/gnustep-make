@@ -66,9 +66,9 @@ d_common	= $(CURDIR)/debian/$(p_common)
 d_make		= $(CURDIR)/debian/$(p_make)
 d_doc		= $(CURDIR)/debian/$(p_doc)
 
-# gcc/gobjc
-CC = gcc
-CXX = g++
+# clang/clang++
+CC = clang
+CXX = clang++
 
 # -----------------------------------------------------------------------------
 # GNUstep SETTINGS

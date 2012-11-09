@@ -7,7 +7,8 @@ Uploaders: Gürkan Sengün <gurkan@phys.ethz.ch>,
 Standards-Version: 3.9.2
 Build-Depends: debhelper (>= 7),
 	       quilt,
-	       gobjc++-4.6
+	       libobjc4-dev,
+	       clang
 Build-Depends-Indep: texinfo,
 		     texlive-base,
 		     texlive-base-bin,
@@ -31,7 +32,7 @@ Description: Common files for the core GNUstep environment
 Package: gnustep-make
 Architecture: all
 Depends: gnustep-common (>= ${source:Version}),
-	 gobjc-4.6,
+	 libobjc4,
 	 ${misc:Depends},
 	 ${gnustep:Depends}
 Suggests: gnustep-make-doc (>= 2.0.0),
